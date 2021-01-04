@@ -163,6 +163,5 @@ export const exportVideo = ({srcVideoUrl, crop, trim, frameRate, quality, scale,
                 video.play()
         };
         video.playbackRate = speed
-        video.volume = 0
         await video.play();
     });
