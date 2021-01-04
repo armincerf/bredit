@@ -20,6 +20,8 @@
   let start = 0;
   let end = 1;
 
+ let currentCut = {};
+
   let onCut = false;
   let playhead = 0;
 
@@ -31,26 +33,26 @@
   const handleTimelinePointerDown = ({ offsetX }) => {
     const xFraction = offsetX / timelineWidth;
     const intersectIdx = cutIntersects(cuts, xFraction);
+    const latestCut = cuts[cuts.length - 1];
+    let intersect = (typeof intersectIdx == "number")
     if (!isPlaying) {
-      if (isBlade && !(typeof intersectIdx == "number")) {
-        const latestCut = cuts[cuts.length - 1];
-        console.log('foo' + latestCut)
+      if (latestCut && !latestCut.click && intersect) {
+        cuts.splice(intersectIdx, 1);
+        cuts = cuts
+      }  else if (isBlade) {
         if (latestCut && latestCut.click) {
+          cuts[cuts.length - 1].click = null
+          currentCut = {}
         } else {
-          console.log('setting')
           cuts = [...cuts, { click: xFraction }];
         }
-      } else if (typeof intersectIdx == "number") {
-        console.log('inter' + intersectIdx)
-        cuts.splice(intersectIdx, 1);
-        cuts = cuts;
-      }
+      } 
+      
     }
   };
 
  const updateCutsOnPointerMove = (playhead) => {
    let cut = cuts[cuts.length - 1]
-   console.log(cuts)
    if(cut && cut.click){
      if(cut.click < playhead) {
        cut.start = cut.click
@@ -58,8 +60,8 @@
      } else {
        cut.end = cut.click
        cut.start = playhead
-       }
-
+     }
+     currentCut = cut
    }
  }
 
@@ -199,9 +201,17 @@
         end += ARROW_INCREMENT;
       }
     })} />
+  {#if currentCut.start}
+<div
+  class="cut"
+        style={[`width: ${Math.abs(currentCut.start - currentCut.end) * 100}%`,
+              `left: ${currentCut.start * 100}%`,
+              `right: ${currentCut.end * 100}%`].join(';')} />
+
+    {/if}
   {#each cuts as { start, end }}
     {#if start}
-      <div
+        <div
         class="cut"
         style={[`width: ${Math.abs(start - end) * 100}%`,
               `left: ${start * 100}%`,
